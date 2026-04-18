@@ -24,11 +24,6 @@ class LeaveRequestController extends Controller
         $userId = Auth::id();
         $currentYear = now()->year;
 
-        $path = null;
-        if (isset($validated['attachment'])) {
-            $path = $validated['attachment']->store('uploads/leave_requests', 'public');
-        }
-
         // Count leave requests for current year
         $leaveCountThisYear = LeaveRequest::where('user_id', $userId)
             ->whereYear('created_at', $currentYear)
@@ -38,6 +33,24 @@ class LeaveRequestController extends Controller
             return response()->json([
                 'message' => 'Batas pengajuan cuti 12 kali per tahun telah tercapai',
             ], 403);
+        }
+
+        // Check for overlapping leave requests
+        $overlapping = LeaveRequest::where('user_id', $userId)
+            ->where('start_date', '<=', $validated['end_date'])
+            ->where('end_date', '>=', $validated['start_date'])
+            ->exists();
+
+        if ($overlapping) {
+            return response()->json([
+                'message' => 'Pengajuan cuti tidak boleh pada tanggal yang sudah ada pengajuan lain',
+            ], 422);
+        }
+
+        // Store file only after all business logic checks pass
+        $path = null;
+        if (isset($validated['attachment'])) {
+            $path = $validated['attachment']->store('uploads/leave_requests', 'public');
         }
 
         $leaveRequest = LeaveRequest::create([
