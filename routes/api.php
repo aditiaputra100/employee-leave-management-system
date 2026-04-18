@@ -14,6 +14,15 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     })->middleware(CheckToken::using('admin'));
+
+    // Leave Request routes
+    Route::get('/leave-requests', [App\Http\Controllers\Api\LeaveRequestController::class, 'index']);
+    Route::post('/leave-requests', [App\Http\Controllers\Api\LeaveRequestController::class, 'store']);
+    Route::get('/leave-requests/{id}', [App\Http\Controllers\Api\LeaveRequestController::class, 'show']);
+
+    // Admin only: update leave request status
+    Route::patch('/leave-requests/{id}/status', [App\Http\Controllers\Api\LeaveRequestController::class, 'updateStatus'])
+        ->middleware(CheckToken::using('admin'));
 });
 
 
