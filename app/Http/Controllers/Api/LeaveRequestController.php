@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class LeaveRequestController extends Controller
 {
@@ -22,7 +21,7 @@ class LeaveRequestController extends Controller
         ]);
 
         $userId = auth()->id();
-        $currentYear = Carbon::now()->year;
+        $currentYear = now()->year;
 
         // Count leave requests for current year
         $leaveCountThisYear = LeaveRequest::where('user_id', $userId)
@@ -63,7 +62,7 @@ class LeaveRequestController extends Controller
             $query->with('user');
         }
 
-        $leaveRequests = $query->get();
+        $leaveRequests = $query->latest()->paginate(10);
 
         return response()->json($leaveRequests);
     }
@@ -102,6 +101,13 @@ class LeaveRequestController extends Controller
 
         if (!$leaveRequest) {
             return response()->json(['message' => 'Leave request not found'], 404);
+        }
+
+        // Only allow updating pending requests
+        if ($leaveRequest->status !== 'pending') {
+            return response()->json([
+                'message' => 'Hanya pengajuan dengan status pending yang dapat diubah',
+            ], 422);
         }
 
         $validated = $request->validate([

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class LeaveRequestSeeder extends Seeder
 {
@@ -13,9 +14,15 @@ class LeaveRequestSeeder extends Seeder
      */
     public function run(): void
     {
+        $employee = User::where('email', 'employee@example.com')->first();
+
+        if (!$employee) {
+            return;
+        }
+
         DB::table('leave_requests')->insert([
             [
-                'user_id' => 2, // employee@example.com
+                'user_id' => $employee->id,
                 'start_date' => '2026-05-01 00:00:00',
                 'end_date' => '2026-05-05 00:00:00',
                 'reason' => 'Family vacation',
@@ -25,7 +32,7 @@ class LeaveRequestSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => 2,
+                'user_id' => $employee->id,
                 'start_date' => '2026-06-10 00:00:00',
                 'end_date' => '2026-06-12 00:00:00',
                 'reason' => 'Medical appointment',
@@ -35,7 +42,7 @@ class LeaveRequestSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => 2,
+                'user_id' => $employee->id,
                 'start_date' => '2026-04-20 00:00:00',
                 'end_date' => '2026-04-21 00:00:00',
                 'reason' => 'Personal business',
