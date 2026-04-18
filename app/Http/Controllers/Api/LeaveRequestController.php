@@ -24,7 +24,10 @@ class LeaveRequestController extends Controller
         $userId = Auth::id();
         $currentYear = now()->year;
 
-        $path = $validated['attachment']->store('uploads/leave_requests', 'public');
+        $path = null;
+        if (isset($validated['attachment'])) {
+            $path = $validated['attachment']->store('uploads/leave_requests', 'public');
+        }
 
         // Count leave requests for current year
         $leaveCountThisYear = LeaveRequest::where('user_id', $userId)
