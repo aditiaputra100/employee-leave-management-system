@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
@@ -17,11 +18,13 @@ class LeaveRequestController extends Controller
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string|max:255',
-            'attachment' => 'nullable|string',
+            'attachment' => 'nullable|file|mimes:pdf|max:5120',
         ]);
 
-        $userId = auth()->id();
+        $userId = Auth::id();
         $currentYear = now()->year;
+
+        $path = $validated['attachment']->store('uploads/leave_requests', 'public');
 
         // Count leave requests for current year
         $leaveCountThisYear = LeaveRequest::where('user_id', $userId)
@@ -39,7 +42,7 @@ class LeaveRequestController extends Controller
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'reason' => $validated['reason'],
-            'attachment' => $validated['attachment'] ?? null,
+            'attachment' => $path,
             'status' => 'pending',
         ]);
 
@@ -51,7 +54,7 @@ class LeaveRequestController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $query = LeaveRequest::query();
 
         if ($user->role === 'employee') {
@@ -78,7 +81,7 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'Leave request not found'], 404);
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Employee can only view their own requests
         if ($user->role === 'employee' && $leaveRequest->user_id !== $user->id) {
