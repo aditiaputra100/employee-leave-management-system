@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function register(Request $request) 
+    public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -23,6 +23,7 @@ class AuthController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
+        $user->role = 'employee'; // Set default role explicitly
         $user->save();
 
         $token = $user->createToken('auth-token', [$user->role])->accessToken;
@@ -35,7 +36,14 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        $credentials = $request->only('email', 'password');
+
+        // Check if required fields are present
+        if (!isset($credentials['email']) || !isset($credentials['password'])) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        if (!Auth::attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
